@@ -158,7 +158,7 @@ bool WinDesktopDup::CaptureNext() {
 	IDXGIResource*          deskRes = nullptr;
 	DXGI_OUTDUPL_FRAME_INFO frameInfo;
 	//SaveImage("D:\\Test.bmp", Latest.Buf.data(), Latest.Width, Latest.Height);
-	hr = DeskDupl->AcquireNextFrame(0, &frameInfo, &deskRes);
+	hr = DeskDupl->AcquireNextFrame(100000, &frameInfo, &deskRes);
 	if (hr == DXGI_ERROR_WAIT_TIMEOUT) {
 		// nothing to see here
 		return false;
