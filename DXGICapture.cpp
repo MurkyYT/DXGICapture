@@ -16,10 +16,7 @@ extern "C" {
     DXGICAPTURE_API void DeInitCapture(intptr_t ptr) {
         delete (WinDesktopDup*)ptr;
     }
-    DXGICAPTURE_API bool UpdateFrame(intptr_t ptr) {
+    DXGICAPTURE_API HBITMAP UpdateFrame(intptr_t ptr) {
         return ((WinDesktopDup*)ptr)->CaptureNext();
-    }
-    DXGICAPTURE_API HBITMAP GetBitmap(intptr_t ptr) {
-        return ((WinDesktopDup*)ptr)->GetHBITMAP();
     }
 }

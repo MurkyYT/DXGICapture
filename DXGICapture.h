@@ -12,6 +12,5 @@
 extern "C" {
 	DXGICAPTURE_API intptr_t InitCapture(void);
 	DXGICAPTURE_API void DeInitCapture(intptr_t ptr);
-	DXGICAPTURE_API bool UpdateFrame(intptr_t ptr);
-	DXGICAPTURE_API HBITMAP GetBitmap(intptr_t ptr);
+	DXGICAPTURE_API HBITMAP UpdateFrame(intptr_t ptr);
 }

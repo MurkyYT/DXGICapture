@@ -20,8 +20,7 @@ public:
 
 	Error Initialize();
 	void  Close();
-	bool  CaptureNext();
-	HBITMAP GetHBITMAP();
+	HBITMAP  CaptureNext();
 
 private:
 	ID3D11Device*           D3DDevice        = nullptr;
@@ -30,4 +29,5 @@ private:
 	DXGI_OUTPUT_DESC        OutputDesc;
 	bool                    HaveFrameLock = false;
 	void                    Reinitialize();
+	HBITMAP GetHBITMAP();
 };

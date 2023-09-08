@@ -140,9 +140,9 @@ void WinDesktopDup::Reinitialize()
 	Initialize();
 }
 
-bool WinDesktopDup::CaptureNext() {
+HBITMAP WinDesktopDup::CaptureNext() {
 	if (!DeskDupl)
-		return false;
+		return NULL;
 
 	HRESULT hr;
 
@@ -161,14 +161,14 @@ bool WinDesktopDup::CaptureNext() {
 	hr = DeskDupl->AcquireNextFrame(100000, &frameInfo, &deskRes);
 	if (hr == DXGI_ERROR_WAIT_TIMEOUT) {
 		// nothing to see here
-		return false;
+		return NULL;
 	}
 	if (FAILED(hr)) {
 		// perhaps shutdown and reinitialize
 		auto msg = tsf::fmt("Acquire failed: %x\n", hr);
 		OutputDebugStringA(msg.c_str());
 		Reinitialize();
-		return false;
+		return NULL;
 	}
 
 	HaveFrameLock = true;
@@ -179,7 +179,7 @@ bool WinDesktopDup::CaptureNext() {
 	deskRes = nullptr;
 	if (FAILED(hr)) {
 		// not expected
-		return false;
+		return NULL;
 	}
 
 	bool ok = true;
@@ -217,8 +217,11 @@ bool WinDesktopDup::CaptureNext() {
 
 	cpuTex->Release();
 	gpuTex->Release();
-
-	return ok;
+	if (!ok)
+		return NULL;
+	HBITMAP res = GetHBITMAP();
+	Latest.Buf.clear();
+	return res;
 }
 HBITMAP WinDesktopDup::GetHBITMAP() {
 	HDC        hdc = GetDC(NULL);
