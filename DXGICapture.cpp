@@ -17,6 +17,9 @@ extern "C" {
         delete (WinDesktopDup*)ptr;
     }
     DXGICAPTURE_API HBITMAP UpdateFrame(intptr_t ptr) {
-        return ((WinDesktopDup*)ptr)->CaptureNext();
+        try {
+            return ((WinDesktopDup*)ptr)->CaptureNext();
+        }
+        catch (char* e) { return NULL; }
     }
 }
