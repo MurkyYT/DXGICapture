@@ -10,7 +10,8 @@
 #define DXGICAPTURE_API __declspec(dllimport)
 #endif
 extern "C" {
-	DXGICAPTURE_API intptr_t InitCapture(void);
-	DXGICAPTURE_API void DeInitCapture(intptr_t ptr);
-	DXGICAPTURE_API HBITMAP UpdateFrame(intptr_t ptr);
+	DXGICAPTURE_API bool InitCapture(void);
+	DXGICAPTURE_API void DeInitCapture(void);
+	DXGICAPTURE_API HBITMAP UpdateFrame(void);
+	DXGICAPTURE_API BOOL IsEnabled(void);
 }
