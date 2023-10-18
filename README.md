@@ -4,7 +4,7 @@
 This library is used by [CSAuto](https://github.com/MurkyYT/CSAuto) to capture the screen of [CS2](https://store.steampowered.com/app/730/CounterStrike_2/)
 ### Usage
 **C#**
-Example DXGIcapture.cs class in [here](https://github.com/MurkyYT/CSAuto/blob/master/src/CSAuto/Utils/DXGICapture.cs)
+Example DXGIcapture.cs class in [here](https://github.com/MurkyYT/CSAuto/blob/dev/src/CSAuto/Utils/DXGICapture.cs)
 ```C#
 //Create new DXGICapture object
 DXGICapture DXGIcapture = new DXGICapture();
