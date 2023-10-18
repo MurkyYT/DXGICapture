@@ -21,15 +21,25 @@ extern "C" {
         return true;
     }
     DXGICAPTURE_API void DeInitCapture(void) {
-        if (dup != NULL) {
-            delete dup;
+        __try {
+            if (dup != NULL) {
+                delete dup;
+                dup = NULL;
+            }
+        }
+        __except (EXCEPTION_EXECUTE_HANDLER) {
             dup = NULL;
         }
     }
     DXGICAPTURE_API HBITMAP UpdateFrame(void) {
-        if (dup != NULL)
-            return dup->CaptureNext();
-        return NULL;
+        __try {
+            if (dup != NULL)
+                return dup->CaptureNext();
+            return NULL;
+        }
+        __except (EXCEPTION_EXECUTE_HANDLER) {
+            return NULL;
+        }
     }
     DXGICAPTURE_API BOOL IsEnabled(void)
     {
