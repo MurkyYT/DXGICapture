@@ -103,7 +103,7 @@ Error WinDesktopDup::Initialize() {
 		return tsf::fmt("DuplicateOutput failed: %v", hr);
 		//return ProcessFailure(m_Device, L"Failed to get duplicate output in DUPLICATIONMANAGER", L"Error", hr, CreateDuplicationExpectedErrors);
 	}
-
+	Enabled = true;
 	return "";
 }
 
@@ -121,22 +121,11 @@ void WinDesktopDup::Close() {
 	D3DDeviceContext = nullptr;
 	D3DDevice        = nullptr;
 	HaveFrameLock    = false;
+	Enabled = false;
 }
 void WinDesktopDup::Reinitialize() 
 {
-	if (DeskDupl)
-		DeskDupl->Release();
-
-	if (D3DDeviceContext)
-		D3DDeviceContext->Release();
-
-	if (D3DDevice)
-		D3DDevice->Release();
-
-	DeskDupl         = nullptr;
-	D3DDeviceContext = nullptr;
-	D3DDevice        = nullptr;
-	HaveFrameLock    = false;
+	Close();
 	Initialize();
 }
 

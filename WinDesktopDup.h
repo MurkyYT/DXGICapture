@@ -15,6 +15,7 @@ class WinDesktopDup {
 public:
 	Bitmap Latest;
 	int    OutputNumber = 0;
+	BOOL Enabled = false;
 
 	~WinDesktopDup();
 
