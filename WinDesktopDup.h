@@ -14,22 +14,22 @@ struct Bitmap {
 
 class WinDesktopDup {
 public:
-	Bitmap Latest;
-	BOOL Enabled = false;
-
 	~WinDesktopDup();
 
+	BOOL IsEnabled() { return m_enabled; }
 	BOOL Initialize();
 	void  Close();
-	int		 CapturesCount() { return DeskDupls.size(); }
+	int		 CapturesCount() { return m_deskDupls.size(); }
 	HBITMAP  CaptureNext(int index);
 
 private:
-	ID3D11Device*           D3DDevice        = nullptr;
-	ID3D11DeviceContext*    D3DDeviceContext = nullptr;
+	ID3D11Device*           m_D3DDevice        = nullptr;
+	ID3D11DeviceContext*    m_D3DDeviceContext = nullptr;
 	void                    Reinitialize();
-	std::vector<bool> HaveFrameLocks;
-	std::vector<DXGI_OUTPUT_DESC> OutputDescs;
-	std::vector<IDXGIOutputDuplication*> DeskDupls;
+	std::vector<bool> m_haveFrameLocks;
+	std::vector<DXGI_OUTPUT_DESC> m_outputDescs;
+	std::vector<IDXGIOutputDuplication*> m_deskDupls;
 	HBITMAP GetHBITMAP(int index);
+	Bitmap m_latestBmp;
+	BOOL m_enabled = false;
 };

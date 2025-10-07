@@ -17,17 +17,17 @@ extern "C" {
         dup.Close();
     }
     DXGICAPTURE_API HBITMAP UpdateFrame(void) {
-        if (dup.Enabled)
+        if (dup.IsEnabled())
             return dup.CaptureNext(0);
         return NULL;
     }
     DXGICAPTURE_API HBITMAP CaptureScreen(int index) {
-        if (dup.Enabled)
+        if (dup.IsEnabled())
             return dup.CaptureNext(index);
         return NULL;
     }
     DXGICAPTURE_API BOOL IsEnabled(void)
     {
-        return dup.Enabled;
+        return dup.IsEnabled();
     }
 }
