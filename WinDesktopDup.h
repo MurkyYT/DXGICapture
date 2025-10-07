@@ -1,34 +1,35 @@
 #pragma once
-#include "stdafx.h"
-typedef std::string Error;
 
-    // BGRA U8 Bitmap
+#include <vector>
+#include <d3d11.h>
+#include <dxgi1_2.h>
+
+// BGRA U8 Bitmap
 struct Bitmap {
 	int                  Width  = 0;
 	int                  Height = 0;
 	std::vector<uint8_t> Buf;
 };
 
-// WinDesktopDup hides the gory details of capturing the screen using the
-// Windows Desktop Duplication API
+
 class WinDesktopDup {
 public:
 	Bitmap Latest;
-	int    OutputNumber = 0;
 	BOOL Enabled = false;
 
 	~WinDesktopDup();
 
-	Error Initialize();
+	BOOL Initialize();
 	void  Close();
-	HBITMAP  CaptureNext();
+	int		 CapturesCount() { return DeskDupls.size(); }
+	HBITMAP  CaptureNext(int index);
 
 private:
 	ID3D11Device*           D3DDevice        = nullptr;
 	ID3D11DeviceContext*    D3DDeviceContext = nullptr;
-	IDXGIOutputDuplication* DeskDupl         = nullptr;
-	DXGI_OUTPUT_DESC        OutputDesc;
-	bool                    HaveFrameLock = false;
 	void                    Reinitialize();
-	HBITMAP GetHBITMAP();
+	std::vector<bool> HaveFrameLocks;
+	std::vector<DXGI_OUTPUT_DESC> OutputDescs;
+	std::vector<IDXGIOutputDuplication*> DeskDupls;
+	HBITMAP GetHBITMAP(int index);
 };

@@ -15,24 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="cpp.hint" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="DXGICapture.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WinDesktopDup.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="DXGICapture.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dllmain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WinDesktopDup.cpp">
+    <ClCompile Include="TestProject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
