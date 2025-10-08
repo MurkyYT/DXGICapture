@@ -5,28 +5,28 @@
 WinDesktopDup dup;
 
 extern "C" {
-    DXGICAPTURE_API BOOL InitCapture(void)
+    DXGICAPTURE_API BOOL DXGI_InitCapture(void)
     {
         return dup.Initialize();
     }
-    DXGICAPTURE_API int OutputsCount(void)
+    DXGICAPTURE_API int DXGI_OutputsCount(void)
     {
         return dup.CapturesCount();
     }
-    DXGICAPTURE_API void DeInitCapture(void) {
+    DXGICAPTURE_API void DXGI_DeInitCapture(void) {
         dup.Close();
     }
-    DXGICAPTURE_API HBITMAP UpdateFrame(void) {
+    DXGICAPTURE_API HBITMAP DXGI_UpdateFrame(void) {
         if (dup.IsEnabled())
             return dup.CaptureNext(0);
         return NULL;
     }
-    DXGICAPTURE_API HBITMAP CaptureScreen(int index) {
+    DXGICAPTURE_API HBITMAP DXGI_CaptureScreen(int index) {
         if (dup.IsEnabled())
             return dup.CaptureNext(index);
         return NULL;
     }
-    DXGICAPTURE_API BOOL IsEnabled(void)
+    DXGICAPTURE_API BOOL DXGI_IsEnabled(void)
     {
         return dup.IsEnabled();
     }

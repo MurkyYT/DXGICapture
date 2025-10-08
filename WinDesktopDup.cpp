@@ -5,12 +5,10 @@ WinDesktopDup::~WinDesktopDup() {
 }
 
 BOOL WinDesktopDup::Initialize() {
-	// Get desktop
 	HDESK hDesk = OpenInputDesktop(0, FALSE, GENERIC_ALL);
 	if (!hDesk)
 		return FALSE;
 
-	// Attach desktop to this thread (presumably for cases where this is not the main/UI thread)
 	BOOL deskAttached = SetThreadDesktop(hDesk) != 0;
 	CloseDesktop(hDesk);
 	hDesk = NULL;
@@ -20,19 +18,8 @@ BOOL WinDesktopDup::Initialize() {
 			return FALSE;
 	}
 
-	// Initialize DirectX
 	HRESULT hr = S_OK;
 
-	// Driver types supported
-	D3D_DRIVER_TYPE driverTypes[] = {
-		D3D_DRIVER_TYPE_HARDWARE,
-		D3D_DRIVER_TYPE_WARP,
-		D3D_DRIVER_TYPE_REFERENCE,
-	};
-
-	size_t numDriverTypes = ARRAYSIZE(driverTypes);
-
-	// Feature levels supported
 	D3D_FEATURE_LEVEL featureLevels[] = {
 		D3D_FEATURE_LEVEL_11_0,
 		D3D_FEATURE_LEVEL_10_1,
@@ -43,70 +30,88 @@ BOOL WinDesktopDup::Initialize() {
 
 	D3D_FEATURE_LEVEL featureLevel;
 
-	// Create device
-	for (size_t i = 0; i < numDriverTypes; i++) {
-		hr = D3D11CreateDevice(NULL, driverTypes[i], NULL, 0, featureLevels, (UINT)numFeatureLevels,
-			D3D11_SDK_VERSION, &m_D3DDevice, &featureLevel, &m_D3DDeviceContext);
-		if (SUCCEEDED(hr))
-			break;
-	}
+	IDXGIFactory1* dxgiFactory = NULL;
+	hr = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&dxgiFactory);
 	if (FAILED(hr))
 		return FALSE;
 
-	// Get DXGI device
-	IDXGIDevice* dxgiDevice = NULL;
-	hr = m_D3DDevice->QueryInterface(__uuidof(IDXGIDevice), (void**)&dxgiDevice);
-	if (FAILED(hr))
-		return FALSE;
-
-	// Get DXGI adapter
-	IDXGIAdapter* dxgiAdapter = NULL;
-	hr = dxgiDevice->GetParent(__uuidof(IDXGIAdapter), (void**)&dxgiAdapter);
-	dxgiDevice->Release();
-	dxgiDevice = NULL;
-	if (FAILED(hr))
-		return FALSE;
-
-	// Get outputs
-	std::vector<IDXGIOutput*> outputs;
-	IDXGIOutput* dxgiOutput = NULL;
-	for (UINT i = 0; dxgiAdapter->EnumOutputs(i, &dxgiOutput) != DXGI_ERROR_NOT_FOUND; ++i) {
-		if (dxgiOutput) {
-			outputs.push_back(dxgiOutput);
+	std::vector<IDXGIAdapter1*> adapters;
+	IDXGIAdapter1* adapter = NULL;
+	for (UINT i = 0; dxgiFactory->EnumAdapters1(i, &adapter) != DXGI_ERROR_NOT_FOUND; ++i) {
+		if (adapter) {
+			adapters.push_back(adapter);
 		}
 	}
 
-	dxgiAdapter->Release();
-	dxgiAdapter = NULL;
-	if (FAILED(hr))
+	dxgiFactory->Release();
+	dxgiFactory = NULL;
+
+	if (adapters.empty())
 		return FALSE;
 
-	DXGI_OUTPUT_DESC OutputDesc;
-	IDXGIOutputDuplication* DeskDupl;
+	for (size_t adapterIdx = 0; adapterIdx < adapters.size(); adapterIdx++) {
+		IDXGIAdapter1* currentAdapter = adapters[adapterIdx];
 
-	for (size_t i = 0; i < outputs.size(); i++)
-	{
-		dxgiOutput = outputs[i];
-		dxgiOutput->GetDesc(&OutputDesc);
+		ID3D11Device* d3dDevice = NULL;
+		ID3D11DeviceContext* d3dDeviceContext = NULL;
 
-		m_outputDescs.push_back(OutputDesc);
+		hr = D3D11CreateDevice(currentAdapter, D3D_DRIVER_TYPE_UNKNOWN, NULL, 0, featureLevels, (UINT)numFeatureLevels,
+			D3D11_SDK_VERSION, &d3dDevice, &featureLevel, &d3dDeviceContext);
 
-		IDXGIOutput1* dxgiOutput1 = NULL;
-		hr = dxgiOutput->QueryInterface(__uuidof(dxgiOutput1), (void**)&dxgiOutput1);
-		dxgiOutput->Release();
-		dxgiOutput = NULL;
-		if (FAILED(hr))
-			return FALSE;
+		if (FAILED(hr)) {
+			currentAdapter->Release();
+			continue;
+		}
 
-		hr = dxgiOutput1->DuplicateOutput(m_D3DDevice, &DeskDupl);
-		dxgiOutput1->Release();
-		dxgiOutput1 = NULL;
-		if (FAILED(hr))
-			return FALSE;
+		bool addedOutput = false;
 
-		m_deskDupls.push_back(DeskDupl);
-		m_haveFrameLocks.push_back(false);
+		IDXGIOutput* dxgiOutput = NULL;
+		for (UINT i = 0; currentAdapter->EnumOutputs(i, &dxgiOutput) != DXGI_ERROR_NOT_FOUND; ++i) {
+			if (dxgiOutput) {
+				DXGI_OUTPUT_DESC outputDesc;
+				dxgiOutput->GetDesc(&outputDesc);
+
+				IDXGIOutput1* dxgiOutput1 = NULL;
+				hr = dxgiOutput->QueryInterface(__uuidof(dxgiOutput1), (void**)&dxgiOutput1);
+				dxgiOutput->Release();
+				dxgiOutput = NULL;
+
+				if (SUCCEEDED(hr)) {
+					IDXGIOutputDuplication* deskDupl = NULL;
+					hr = dxgiOutput1->DuplicateOutput(d3dDevice, &deskDupl);
+					dxgiOutput1->Release();
+					dxgiOutput1 = NULL;
+
+					if (SUCCEEDED(hr)) {
+						m_outputDescs.push_back(outputDesc);
+						m_deskDupls.push_back(deskDupl);
+						m_haveFrameLocks.push_back(false);
+						m_deskDuplToDeviceIndex[deskDupl] = m_devices.size();
+						addedOutput = true;
+					}
+				}
+			}
+		}
+
+		if (!addedOutput) {
+			if (d3dDeviceContext) {
+				d3dDeviceContext->Release();
+			}
+			if (d3dDevice) {
+				d3dDevice->Release();
+			}
+		}
+		else 
+		{
+			m_devices.push_back(d3dDevice);
+			m_deviceContexts.push_back(d3dDeviceContext);
+		}
+
+		currentAdapter->Release();
 	}
+
+	if (m_deskDupls.empty())
+		return FALSE;
 
 	m_enabled = true;
 	return TRUE;
@@ -120,17 +125,19 @@ void WinDesktopDup::Close() {
 			DeskDupl->Release();
 	}
 
-	if (m_D3DDeviceContext)
-		m_D3DDeviceContext->Release();
-
-	if (m_D3DDevice)
-		m_D3DDevice->Release();
+	for (size_t i = 0; i < m_devices.size(); i++) {
+		if (m_devices[i])
+			m_devices[i]->Release();
+		if (m_deviceContexts[i])
+			m_deviceContexts[i]->Release();
+	}
 
 	m_deskDupls.clear();
 	m_haveFrameLocks.clear();
 	m_outputDescs.clear();
-	m_D3DDeviceContext = NULL;
-	m_D3DDevice = NULL;
+	m_devices.clear();
+	m_deviceContexts.clear();
+	m_deskDuplToDeviceIndex.clear();
 	m_enabled = false;
 }
 
@@ -178,7 +185,10 @@ HBITMAP WinDesktopDup::CaptureNext(int index) {
 		void* bits = NULL;
 		HBITMAP dib = CreateDIBSection(hdc, &inf, 0, &bits, NULL, 0);
 
-		if (!dib) return FALSE;
+		if (!dib) {
+			ReleaseDC(NULL, hdc);
+			return NULL;
+		}
 
 		HDC hdcDest = CreateCompatibleDC(hdc);
 		HDC hdcSrc = CreateCompatibleDC(hdc);
@@ -192,7 +202,7 @@ HBITMAP WinDesktopDup::CaptureNext(int index) {
 			int bmpWidth = m_outputDescs[i].DesktopCoordinates.right - m_outputDescs[i].DesktopCoordinates.left;
 			int bmpHeight = m_outputDescs[i].DesktopCoordinates.bottom - m_outputDescs[i].DesktopCoordinates.top;
 
-			HBITMAP bmp = CaptureNext(i);
+			HBITMAP bmp = CaptureNext((int)i);
 
 			if (bmp) {
 				HBITMAP oldSrc = (HBITMAP)SelectObject(hdcSrc, bmp);
@@ -217,6 +227,14 @@ HBITMAP WinDesktopDup::CaptureNext(int index) {
 
 		HRESULT hr;
 		IDXGIOutputDuplication* DeskDupl = m_deskDupls[index];
+		auto it = m_deskDuplToDeviceIndex.find(DeskDupl);
+		if (it == m_deskDuplToDeviceIndex.end())
+			return NULL;
+		UINT deviceIndex = it->second;
+		if (deviceIndex >= m_devices.size())
+			return NULL;
+		ID3D11Device* device = m_devices[deviceIndex];
+		ID3D11DeviceContext* deviceContext = m_deviceContexts[deviceIndex];
 
 		if (m_haveFrameLocks[index]) {
 			m_haveFrameLocks[index] = false;
@@ -226,7 +244,7 @@ HBITMAP WinDesktopDup::CaptureNext(int index) {
 		IDXGIResource* deskRes = NULL;
 		DXGI_OUTDUPL_FRAME_INFO frameInfo;
 
-		hr = DeskDupl->AcquireNextFrame(100000, &frameInfo, &deskRes);
+		hr = DeskDupl->AcquireNextFrame(500, &frameInfo, &deskRes);
 		if (hr == DXGI_ERROR_WAIT_TIMEOUT)
 			return NULL;
 
@@ -253,17 +271,20 @@ HBITMAP WinDesktopDup::CaptureNext(int index) {
 		desc.BindFlags = 0;
 		desc.MiscFlags = 0;
 		ID3D11Texture2D* cpuTex = NULL;
-		hr = m_D3DDevice->CreateTexture2D(&desc, NULL, &cpuTex);
+		hr = device->CreateTexture2D(&desc, NULL, &cpuTex);
 
 		if (SUCCEEDED(hr))
-			m_D3DDeviceContext->CopyResource(cpuTex, gpuTex);
+			deviceContext->CopyResource(cpuTex, gpuTex);
 		else
 			ok = false;
 
-		if (!cpuTex) return FALSE;
+		gpuTex->Release();
+
+		if (!cpuTex)
+			return NULL;
 
 		D3D11_MAPPED_SUBRESOURCE sr;
-		hr = m_D3DDeviceContext->Map(cpuTex, 0, D3D11_MAP_READ, 0, &sr);
+		hr = deviceContext->Map(cpuTex, 0, D3D11_MAP_READ, 0, &sr);
 		if (SUCCEEDED(hr)) {
 			if (m_latestBmp.Width != desc.Width || m_latestBmp.Height != desc.Height) {
 				m_latestBmp.Width = desc.Width;
@@ -277,14 +298,13 @@ HBITMAP WinDesktopDup::CaptureNext(int index) {
 				for (int y = 0; y < (int)desc.Height; y++)
 					memcpy(m_latestBmp.Buf.data() + y * desc.Width * 4, (uint8_t*)sr.pData + sr.RowPitch * y, desc.Width * 4);
 			}
-			m_D3DDeviceContext->Unmap(cpuTex, 0);
+			deviceContext->Unmap(cpuTex, 0);
 		}
 		else {
 			ok = false;
 		}
 
 		cpuTex->Release();
-		gpuTex->Release();
 
 		if (!ok)
 			return NULL;
@@ -296,6 +316,9 @@ HBITMAP WinDesktopDup::CaptureNext(int index) {
 }
 
 HBITMAP WinDesktopDup::GetHBITMAP(int index) {
+	if (m_latestBmp.Buf.empty() || m_latestBmp.Width == 0 || m_latestBmp.Height == 0)
+		return NULL;
+
 	HDC hdc = GetDC(NULL);
 	BITMAPINFO inf;
 	memset(&inf, 0, sizeof(inf));
@@ -323,7 +346,10 @@ HBITMAP WinDesktopDup::GetHBITMAP(int index) {
 	void* bits = NULL;
 	HBITMAP dib = CreateDIBSection(hdc, &inf, 0, &bits, NULL, 0);
 
-	if (!dib) return NULL;
+	if (!dib) {
+		ReleaseDC(NULL, hdc);
+		return NULL;
+	}
 
 	uint32_t* src = (uint32_t*)m_latestBmp.Buf.data();
 	uint32_t* dst = (uint32_t*)bits;

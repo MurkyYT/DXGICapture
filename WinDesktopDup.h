@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <unordered_map>
 #include <d3d11.h>
 #include <dxgi1_2.h>
 
@@ -23,12 +24,13 @@ public:
 	HBITMAP  CaptureNext(int index);
 
 private:
-	ID3D11Device*           m_D3DDevice        = nullptr;
-	ID3D11DeviceContext*    m_D3DDeviceContext = nullptr;
 	void                    Reinitialize();
 	std::vector<bool> m_haveFrameLocks;
 	std::vector<DXGI_OUTPUT_DESC> m_outputDescs;
 	std::vector<IDXGIOutputDuplication*> m_deskDupls;
+	std::vector<ID3D11Device*> m_devices;
+	std::vector<ID3D11DeviceContext*> m_deviceContexts;
+	std::unordered_map<IDXGIOutputDuplication*, UINT> m_deskDuplToDeviceIndex;
 	HBITMAP GetHBITMAP(int index);
 	Bitmap m_latestBmp;
 	BOOL m_enabled = false;

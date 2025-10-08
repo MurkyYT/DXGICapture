@@ -43,14 +43,14 @@ int main()
 {
     Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
-	InitCapture();
+	DXGI_InitCapture();
 
     Sleep(100);
 
 	CLSID pngClsid;
 	GetEncoderClsid(L"image/png", &pngClsid);
 
-    HBITMAP hBitmap = CaptureScreen(DXGICAPTURE_ALL_SCREENS);
+    HBITMAP hBitmap = DXGI_CaptureScreen(DXGICAPTURE_ALL_SCREENS);
 	Gdiplus::Bitmap bitmap(hBitmap, nullptr);
 	bitmap.Save(L"./test_all.png", &pngClsid, nullptr);
 
@@ -58,9 +58,9 @@ int main()
 
     DeleteObject(hBitmap);
 
-    for (int i = 0; i < OutputsCount(); i++)
+    for (int i = 0; i < DXGI_OutputsCount(); i++)
     {
-        HBITMAP hBitmap = CaptureScreen(i);
+        HBITMAP hBitmap = DXGI_CaptureScreen(i);
 
         Gdiplus::Bitmap bitmap(hBitmap, nullptr);
         bitmap.Save((std::wstring(L"./test") + std::to_wstring(i) + L".png").c_str(), &pngClsid, nullptr);
@@ -70,7 +70,7 @@ int main()
         DeleteObject(hBitmap);
     }
 
-    hBitmap = UpdateFrame();
+    hBitmap = DXGI_UpdateFrame();
 
     Gdiplus::Bitmap bitmap2(hBitmap, nullptr);
     bitmap2.Save(L"./test_old.png", &pngClsid, nullptr);
@@ -79,5 +79,5 @@ int main()
 
     DeleteObject(hBitmap);
     
-    DeInitCapture();
+    DXGI_DeInitCapture();
 }
