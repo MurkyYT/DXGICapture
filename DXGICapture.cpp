@@ -13,6 +13,10 @@ extern "C" {
     {
         return dup.CapturesCount();
     }
+    DXGICAPTURE_API DXGI_OUTPUT_DESC DXGI_GetOutputDescription(int index)
+    {
+        return dup.GetOutputDescription(index);
+    }
     DXGICAPTURE_API void DXGI_DeInitCapture(void) {
         dup.Close();
     }

@@ -18,6 +18,7 @@ public:
 	~WinDesktopDup();
 
 	BOOL IsEnabled() { return m_enabled; }
+	DXGI_OUTPUT_DESC GetOutputDescription(int index) { return m_outputDescs[index]; }
 	BOOL Initialize();
 	void  Close();
 	int		 CapturesCount() { return m_deskDupls.size(); }

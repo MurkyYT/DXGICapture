@@ -61,11 +61,16 @@ int main()
     for (int i = 0; i < DXGI_OutputsCount(); i++)
     {
         HBITMAP hBitmap = DXGI_CaptureScreen(i);
+        DXGI_OUTPUT_DESC desc = DXGI_GetOutputDescription(i);
+
+        DISPLAY_DEVICEW dispDev{};
+        dispDev.cb = sizeof(DISPLAY_DEVICEW);
+        EnumDisplayDevicesW(desc.DeviceName, 0, &dispDev, 0);
 
         Gdiplus::Bitmap bitmap(hBitmap, nullptr);
         bitmap.Save((std::wstring(L"./test") + std::to_wstring(i) + L".png").c_str(), &pngClsid, nullptr);
 
-        printf("Saved test%d.png to CWD\n", i);
+        printf("Saved '%ws' as test%d.png to CWD\n", dispDev.DeviceString, i);
 
         DeleteObject(hBitmap);
     }
