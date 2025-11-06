@@ -30,21 +30,18 @@ BOOL WinDesktopDup::Initialize() {
 
 	D3D_FEATURE_LEVEL featureLevel;
 
-	IDXGIFactory1* dxgiFactory = NULL;
-	hr = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&dxgiFactory);
+	m_dxgiFactory = NULL;
+	hr = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&m_dxgiFactory);
 	if (FAILED(hr))
 		return FALSE;
 
 	std::vector<IDXGIAdapter1*> adapters;
 	IDXGIAdapter1* adapter = NULL;
-	for (UINT i = 0; dxgiFactory->EnumAdapters1(i, &adapter) != DXGI_ERROR_NOT_FOUND; ++i) {
+	for (UINT i = 0; m_dxgiFactory->EnumAdapters1(i, &adapter) != DXGI_ERROR_NOT_FOUND; ++i) {
 		if (adapter) {
 			adapters.push_back(adapter);
 		}
 	}
-
-	dxgiFactory->Release();
-	dxgiFactory = NULL;
 
 	if (adapters.empty())
 		return FALSE;
@@ -132,6 +129,10 @@ void WinDesktopDup::Close() {
 			m_deviceContexts[i]->Release();
 	}
 
+	if(m_dxgiFactory)
+		m_dxgiFactory->Release();
+
+	m_dxgiFactory = NULL;
 	m_deskDupls.clear();
 	m_haveFrameLocks.clear();
 	m_outputDescs.clear();
@@ -150,6 +151,12 @@ void WinDesktopDup::Reinitialize()
 HBITMAP WinDesktopDup::CaptureNext(int index) {
 	if (m_deskDupls.size() == 0)
 		return NULL;
+
+	if (!m_dxgiFactory->IsCurrent())
+	{
+		Reinitialize();
+		return NULL;
+	}
 
 	if (index == -1)
 	{
@@ -244,7 +251,7 @@ HBITMAP WinDesktopDup::CaptureNext(int index) {
 		IDXGIResource* deskRes = NULL;
 		DXGI_OUTDUPL_FRAME_INFO frameInfo;
 
-		hr = DeskDupl->AcquireNextFrame(500, &frameInfo, &deskRes);
+		hr = DeskDupl->AcquireNextFrame(m_timeout, &frameInfo, &deskRes);
 		if (hr == DXGI_ERROR_WAIT_TIMEOUT)
 			return NULL;
 

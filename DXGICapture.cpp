@@ -5,6 +5,10 @@
 WinDesktopDup dup;
 
 extern "C" {
+    DXGICAPTURE_API void DXGI_SetTimeout(UINT ms)
+    {
+        dup.SetTimeout(ms);
+    }
     DXGICAPTURE_API BOOL DXGI_InitCapture(void)
     {
         return dup.Initialize();

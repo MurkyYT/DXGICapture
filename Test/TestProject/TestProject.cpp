@@ -51,8 +51,8 @@ int main()
 	GetEncoderClsid(L"image/png", &pngClsid);
 
     HBITMAP hBitmap = DXGI_CaptureScreen(DXGICAPTURE_ALL_SCREENS);
-	Gdiplus::Bitmap bitmap(hBitmap, nullptr);
-	bitmap.Save(L"./test_all.png", &pngClsid, nullptr);
+    Gdiplus::Bitmap bitmap(hBitmap, nullptr);
+    bitmap.Save(L"./test_all.png", &pngClsid, nullptr);
 
     printf("Saved test_all.png to CWD\n");
 
