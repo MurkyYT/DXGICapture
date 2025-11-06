@@ -17,16 +17,18 @@ class WinDesktopDup {
 public:
 	~WinDesktopDup();
 
-	BOOL             IsEnabled() { return m_enabled; }
-	DXGI_OUTPUT_DESC GetOutputDescription(int index) { return m_outputDescs[index]; }
-	BOOL             Initialize();
-	void             Close();
-	void             SetTimeout(UINT ms) { m_timeout = ms; }
-	int		         CapturesCount() { return m_deskDupls.size(); }
-	HBITMAP          CaptureNext(int index);
+	BOOL               IsEnabled() { return m_enabled; }
+	DXGI_OUTPUT_DESC   GetOutputDescription(int index) { return m_outputDescs[index]; }
+	DXGI_ADAPTER_DESC1 GetAdapterDescription(int index);
+	BOOL               Initialize();
+	void               Close();
+	void               SetTimeout(UINT ms) { m_timeout = ms; }
+	int		           CapturesCount() { return m_deskDupls.size(); }
+	int                AdaptersCount() { return m_devices.size(); }
+	HBITMAP            CaptureNext(int index);
 
 private:
-	void             Reinitialize();
+	void               Reinitialize();
 	std::vector<bool> m_haveFrameLocks;
 	std::vector<DXGI_OUTPUT_DESC> m_outputDescs;
 	std::vector<IDXGIOutputDuplication*> m_deskDupls;

@@ -382,3 +382,20 @@ HBITMAP WinDesktopDup::GetHBITMAP(int index) {
 	ReleaseDC(NULL, hdc);
 	return dib;
 }
+
+DXGI_ADAPTER_DESC1 WinDesktopDup::GetAdapterDescription(int index)
+{
+	DXGI_ADAPTER_DESC1 desc = {};
+	if (!m_dxgiFactory)
+		return desc;
+
+	IDXGIAdapter1* adapter = nullptr;
+	HRESULT hr = m_dxgiFactory->EnumAdapters1(index, &adapter);
+	if (FAILED(hr) || !adapter)
+		return desc;
+
+	adapter->GetDesc1(&desc);
+	adapter->Release();
+
+	return desc;
+}
